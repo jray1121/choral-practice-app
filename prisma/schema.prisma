@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Collection {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  pieces      Piece[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Piece {
+  id            String    @id @default(cuid())
+  title         String
+  composer      String?
+  arranger      String?
+  collectionId  String
+  collection    Collection @relation(fields: [collectionId], references: [id])
+  scoreFile     File?     @relation("ScoreFile", fields: [scoreFileId], references: [id])
+  scoreFileId   String?
+  audioParts    AudioPart[]
+  difficulty    Difficulty @default(MEDIUM)
+  tags          String[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model AudioPart {
+  id        String   @id @default(cuid())
+  pieceId   String
+  piece     Piece    @relation(fields: [pieceId], references: [id])
+  partType  PartType
+  audioFile File     @relation(fields: [fileId], references: [id])
+  fileId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model File {
+  id          String      @id @default(cuid())
+  filename    String
+  path        String
+  mimeType    String
+  size        Int
+  scoreFor    Piece[]     @relation("ScoreFile")
+  audioFor    AudioPart[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+enum PartType {
+  SOPRANO
+  ALTO
+  TENOR
+  BASS
+  ACCOMPANIMENT
+  FULL_MIX
+}
+
+enum Difficulty {
+  BEGINNER
+  MEDIUM
+  ADVANCED
+  PROFESSIONAL
+}
